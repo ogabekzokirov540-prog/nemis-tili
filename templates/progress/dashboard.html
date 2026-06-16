@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Progress - GermanMaster AI{% endblock %}
+{% block page_title %}Progress Tracker{% endblock %}
+
+{% block content %}
+<!-- Streak & Overview -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6 text-center">
+        <span class="text-4xl streak-fire block mb-2">🔥</span>
+        <p class="text-3xl font-bold text-orange-400">{{ streak.current_streak }}</p>
+        <p class="text-xs text-gray-400">Joriy streak</p>
+        <p class="text-xs text-gray-500 mt-1">Max: {{ streak.longest_streak }} kun</p>
+    </div>
+    <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 text-center">
+        <span class="text-4xl block mb-2">📝</span>
+        <p class="text-3xl font-bold text-blue-400">{{ learned_words }}/{{ total_words }}</p>
+        <p class="text-xs text-gray-400">So'zlar o'rganilgan</p>
+        <div class="mt-2 bg-gray-700 rounded-full h-2">
+            <div class="bg-blue-500 h-2 rounded-full" style="width: {{ word_accuracy }}%"></div>
+        </div>
+    </div>
+    <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 text-center">
+        <span class="text-4xl block mb-2">📚</span>
+        <p class="text-3xl font-bold text-green-400">{{ completed_lessons }}/{{ total_lessons }}</p>
+        <p class="text-xs text-gray-400">Darslar tugatilgan</p>
+        <div class="mt-2 bg-gray-700 rounded-full h-2">
+            <div class="bg-green-500 h-2 rounded-full" style="width: {{ lesson_completion }}%"></div>
+        </div>
+    </div>
+    <div class="bg-gray-800 border border-gray-700 rounded-xl p-6 text-center">
+        <span class="text-4xl block mb-2">⏱</span>
+        <p class="text-3xl font-bold text-purple-400">{{ total_study_time }}</p>
+        <p class="text-xs text-gray-400">Jami daqiqalar (30 kun)</p>
+        <p class="text-xs text-gray-500 mt-1">{{ streak.total_study_days }} kun o'qildi</p>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- So'zlar grafigi -->
+    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h3 class="text-lg font-semibold text-white mb-4">O'rganilgan so'zlar (30 kun)</h3>
+        <canvas id="wordsChart" height="200"></canvas>
+    </div>
+    <!-- O'qish vaqti -->
+    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h3 class="text-lg font-semibold text-white mb-4">O'qish vaqti (daqiqa)</h3>
+        <canvas id="timeChart" height="200"></canvas>
+    </div>
+</div>
+
+<!-- Bugungi faollik -->
+<div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+    <h3 class="text-lg font-semibold text-white mb-4">Bugungi faollik</h3>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+            <p class="text-2xl font-bold text-white">{{ daily_progress.lessons_completed }}</p>
+            <p class="text-xs text-gray-400">Darslar</p>
+        </div>
+        <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+            <p class="text-2xl font-bold text-white">{{ daily_progress.words_learned }}</p>
+            <p class="text-xs text-gray-400">Yangi so'zlar</p>
+        </div>
+        <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+            <p class="text-2xl font-bold text-white">{{ daily_progress.words_reviewed }}</p>
+            <p class="text-xs text-gray-400">Takrorlangan</p>
+        </div>
+        <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+            <p class="text-2xl font-bold text-white">{{ daily_progress.flashcards_reviewed }}</p>
+            <p class="text-xs text-gray-400">Flashcards</p>
+        </div>
+        <div class="bg-gray-700/50 rounded-lg p-4 text-center">
+            <p class="text-2xl font-bold text-white">{{ daily_progress.study_minutes }}</p>
+            <p class="text-xs text-gray-400">Daqiqa</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Fetch chart data
+    fetch('/progress/api/?days=30')
+        .then(r => r.json())
+        .then(data => {
+            // Words chart
+            new Chart(document.getElementById('wordsChart'), {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'So\'zlar',
+                        data: data.words_learned,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(75, 85, 99, 0.3)' }, ticks: { color: '#9CA3AF' } },
+                        x: { grid: { display: false }, ticks: { color: '#9CA3AF', maxTicksLimit: 10 } }
+                    }
+                }
+            });
+
+            // Time chart
+            new Chart(document.getElementById('timeChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Daqiqa',
+                        data: data.study_minutes,
+                        backgroundColor: 'rgba(168, 85, 247, 0.5)',
+                        borderColor: 'rgb(168, 85, 247)',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(75, 85, 99, 0.3)' }, ticks: { color: '#9CA3AF' } },
+                        x: { grid: { display: false }, ticks: { color: '#9CA3AF', maxTicksLimit: 10 } }
+                    }
+                }
+            });
+        });
+</script>
+{% endblock %}

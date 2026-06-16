@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ word.german_word }} - GermanMaster AI{% endblock %}
+{% block page_title %}So'z tafsilotlari{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <div class="flex items-center space-x-3">
+                    {% if word.gender %}
+                    <span class="px-2 py-1 rounded text-sm {% if word.gender == 'der' %}bg-blue-500/20 text-blue-400{% elif word.gender == 'die' %}bg-pink-500/20 text-pink-400{% else %}bg-green-500/20 text-green-400{% endif %}">{{ word.gender }}</span>
+                    {% endif %}
+                    <h1 class="text-3xl font-bold text-white">{{ word.german_word }}</h1>
+                </div>
+                {% if word.plural_form %}
+                <p class="text-gray-400 mt-1">Ko'plik: {{ word.plural_form }}</p>
+                {% endif %}
+            </div>
+            {% if word.image %}
+            <img src="{{ word.image.url }}" class="w-24 h-24 rounded-xl object-cover">
+            {% endif %}
+        </div>
+
+        <div class="space-y-4">
+            <div class="bg-gray-700/50 rounded-lg p-4">
+                <p class="text-sm text-gray-400">O'zbekcha</p>
+                <p class="text-xl text-white">{{ word.uzbek_translation }}</p>
+            </div>
+            {% if word.english_translation %}
+            <div class="bg-gray-700/50 rounded-lg p-4">
+                <p class="text-sm text-gray-400">Inglizcha</p>
+                <p class="text-lg text-gray-200">{{ word.english_translation }}</p>
+            </div>
+            {% endif %}
+            {% if word.example_sentence_de %}
+            <div class="bg-gray-700/50 rounded-lg p-4">
+                <p class="text-sm text-gray-400">Misol</p>
+                <p class="text-white italic">{{ word.example_sentence_de }}</p>
+                {% if word.example_sentence_uz %}
+                <p class="text-gray-400 text-sm mt-1">{{ word.example_sentence_uz }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if word.context_note %}
+            <div class="bg-gray-700/50 rounded-lg p-4">
+                <p class="text-sm text-gray-400">Izoh</p>
+                <p class="text-gray-300">{{ word.context_note }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Stats -->
+        <div class="mt-6 pt-4 border-t border-gray-700 grid grid-cols-3 gap-4 text-center">
+            <div>
+                <p class="text-2xl font-bold text-primary-400">{{ word.srs_level }}/5</p>
+                <p class="text-xs text-gray-400">SRS bosqich</p>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-green-400">{{ word.accuracy_percentage }}%</p>
+                <p class="text-xs text-gray-400">Aniqlik</p>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-yellow-400">{{ word.total_reviews }}</p>
+                <p class="text-xs text-gray-400">Takrorlashlar</p>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-between">
+            <a href="{% url 'vocabulary:list' %}" class="text-gray-400 hover:text-white transition">← Orqaga</a>
+            {% if word.audio_pronunciation %}
+            <button onclick="new Audio('{{ word.audio_pronunciation.url }}').play()" class="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-lg transition">
+                🔊 Tinglash
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Yangi so'z qo'shish - GermanMaster AI{% endblock %}
+{% block page_title %}Yangi so'z qo'shish{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Asosiy ma'lumotlar -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <h3 class="text-lg font-semibold text-white mb-4">Asosiy ma'lumotlar</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Nemischa so'z *</label>
+                    <input type="text" name="german_word" required
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                        placeholder="z.B. Haus, gehen, schön">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">O'zbekcha tarjima *</label>
+                    <input type="text" name="uzbek_translation" required
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                        placeholder="masalan: uy, bormoq, chiroyli">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Inglizcha tarjima</label>
+                    <input type="text" name="english_translation"
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                        placeholder="house, to go, beautiful">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Artikl (rod)</label>
+                    <select name="gender" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500">
+                        <option value="">Artikelsiz (fe'l, sifat...)</option>
+                        <option value="der">der (Maskulin)</option>
+                        <option value="die">die (Feminin)</option>
+                        <option value="das">das (Neytral)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Ko'plik shakli</label>
+                    <input type="text" name="plural_form"
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                        placeholder="die Häuser">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">So'z turi</label>
+                    <select name="word_type_id" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500">
+                        <option value="">Tanlang...</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kontekst -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <h3 class="text-lg font-semibold text-white mb-4">Kontekst va misollar</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Misol gap (nemischa)</label>
+                    <textarea name="example_de" rows="2"
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                        placeholder="Ich gehe nach Hause."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Misol gap (o'zbekcha)</label>
+                    <textarea name="example_uz" rows="2"
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                        placeholder="Men uyga ketayapman."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Qo'shimcha izoh</label>
+                    <textarea name="context_note" rows="2"
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                        placeholder="Grammatika yoki qo'shimcha ma'lumot..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multimedia & Sozlamalar -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <h3 class="text-lg font-semibold text-white mb-4">Multimedia va sozlamalar</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Rasm (vizual xotira uchun)</label>
+                    <input type="file" name="image" accept="image/*"
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary-600 file:text-white file:text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Talaffuz (audio)</label>
+                    <input type="file" name="audio" accept="audio/*"
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary-600 file:text-white file:text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Qiyinlik darajasi</label>
+                    <select name="difficulty" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500">
+                        <option value="1">1 - Juda oson</option>
+                        <option value="2">2 - Oson</option>
+                        <option value="3" selected>3 - O'rtacha</option>
+                        <option value="4">4 - Qiyin</option>
+                        <option value="5">5 - Juda qiyin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Bog'liq dars</label>
+                    <select name="lesson_id" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500">
+                        <option value="">Tanlang (ixtiyoriy)...</option>
+                        {% for lesson in lessons %}
+                        <option value="{{ lesson.id }}">{{ lesson.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm text-gray-400 mb-1">Teglar (vergul bilan)</label>
+                    <input type="text" name="tags"
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                        placeholder="A1, oila, kundalik hayot">
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex items-center justify-between">
+            <a href="{% url 'vocabulary:list' %}" class="text-gray-400 hover:text-white transition">← Orqaga</a>
+            <button type="submit" class="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-lg font-medium transition">
+                So'zni saqlash
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
