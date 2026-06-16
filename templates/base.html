@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GermanMaster AI{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe',
+                            300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6',
+                            600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a'
+                        },
+                        german: {
+                            gold: '#FFD700',
+                            red: '#DD0000',
+                            black: '#000000',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Styles -->
+    <style>
+        /* Dark mode scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        /* Smooth transitions */
+        * { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        
+        /* Flashcard flip animation */
+        .flashcard-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flashcard-flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            backface-visibility: hidden;
+        }
+        .flashcard-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Glow effect */
+        .glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); }
+        .glow-blue { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        .glow-yellow { box-shadow: 0 0 15px rgba(234, 179, 8, 0.3); }
+
+        /* Streak fire animation */
+        @keyframes fireGlow {
+            0%, 100% { text-shadow: 0 0 5px #ff6b35, 0 0 10px #ff6b35; }
+            50% { text-shadow: 0 0 20px #ff6b35, 0 0 30px #ff4500; }
+        }
+        .streak-fire { animation: fireGlow 1.5s ease-in-out infinite; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <!-- Sidebar Navigation -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-gray-800 border-r border-gray-700 fixed h-full z-30 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+            <div class="p-4">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="w-10 h-10 bg-gradient-to-br from-german-gold to-german-red rounded-lg flex items-center justify-center">
+                        <span class="text-xl font-bold text-white">G</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-white">GermanMaster</h1>
+                        <p class="text-xs text-gray-400">AI Til O'rganish</p>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="space-y-1">
+                    <a href="{% url 'dashboard:home' %}" class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-700 {% if request.resolver_match.url_name == 'home' %}bg-gray-700 text-primary-400{% else %}text-gray-300{% endif %}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{% url 'lessons:list' %}" class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-700 {% if 'lessons' in request.path %}bg-gray-700 text-primary-400{% else %}text-gray-300{% endif %}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        <span>Darslar</span>
+                    </a>
+                    <a href="{% url 'vocabulary:list' %}" class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-700 {% if 'vocabulary' in request.path %}bg-gray-700 text-primary-400{% else %}text-gray-300{% endif %}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                        <span>Lug'at</span>
+                    </a>
+                    <a href="{% url 'flashcards:deck_list' %}" class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-700 {% if 'flashcards' in request.path %}bg-gray-700 text-primary-400{% else %}text-gray-300{% endif %}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        <span>Flashcards</span>
+                    </a>
+                    <a href="{% url 'notes:list' %}" class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-700 {% if 'notes' in request.path %}bg-gray-700 text-primary-400{% else %}text-gray-300{% endif %}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <span>Eslatmalar</span>
+                    </a>
+                    <a href="{% url 'media:library' %}" class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-700 {% if 'media-library' in request.path %}bg-gray-700 text-primary-400{% else %}text-gray-300{% endif %}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"/></svg>
+                        <span>Media Kutubxona</span>
+                    </a>
+                    <a href="{% url 'progress:dashboard' %}" class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-700 {% if 'progress' in request.path %}bg-gray-700 text-primary-400{% else %}text-gray-300{% endif %}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        <span>Progress</span>
+                    </a>
+                    <a href="{% url 'ai:tools' %}" class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-700 {% if 'ai' in request.path %}bg-gray-700 text-primary-400{% else %}text-gray-300{% endif %}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <span>AI Asboblar</span>
+                    </a>
+                </nav>
+
+                <!-- Dark/Light Mode Toggle -->
+                <div class="mt-8 pt-4 border-t border-gray-700">
+                    <button onclick="toggleTheme()" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-700 text-gray-300 w-full">
+                        <svg id="theme-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                        <span id="theme-text">Yorug' rejim</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:ml-64">
+            <!-- Top Bar -->
+            <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 sticky top-0 z-20">
+                <div class="flex items-center justify-between">
+                    <!-- Mobile menu button -->
+                    <button onclick="toggleSidebar()" class="lg:hidden text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-xl font-semibold">{% block page_title %}Dashboard{% endblock %}</h2>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <!-- Quick search -->
+                        <div class="hidden md:block relative">
+                            <input type="text" id="global-search" placeholder="So'z qidirish... (Ctrl+K)" 
+                                class="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 w-64">
+                            <div id="search-results" class="absolute top-full mt-2 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-xl hidden max-h-64 overflow-y-auto"></div>
+                        </div>
+
+                        <!-- Streak badge -->
+                        <div class="flex items-center space-x-1 bg-gray-700 px-3 py-1.5 rounded-full">
+                            <span class="streak-fire text-lg">🔥</span>
+                            <span class="text-sm font-medium" id="streak-count">0</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="p-6">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Global Scripts -->
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
+                html.classList.remove('dark');
+                document.body.classList.remove('bg-gray-900', 'text-gray-100');
+                document.body.classList.add('bg-gray-50', 'text-gray-900');
+                document.getElementById('theme-text').textContent = 'Qorong\'u rejim';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                document.body.classList.remove('bg-gray-50', 'text-gray-900');
+                document.body.classList.add('bg-gray-900', 'text-gray-100');
+                document.getElementById('theme-text').textContent = 'Yorug\' rejim';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'light') {
+            toggleTheme();
+        }
+
+        // Sidebar toggle (mobile)
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+        // Global search (Ctrl+K)
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('global-search').focus();
+            }
+        });
+
+        // Quick search functionality
+        const searchInput = document.getElementById('global-search');
+        const searchResults = document.getElementById('search-results');
+        let searchTimeout;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const query = this.value.trim();
+                
+                if (query.length < 2) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    fetch(`/ai/context/?word=${encodeURIComponent(query)}`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({word: query})
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.results && data.results.length > 0) {
+                            searchResults.innerHTML = data.results.map(r => `
+                                <div class="px-4 py-3 hover:bg-gray-700 cursor-pointer border-b border-gray-700">
+                                    <div class="font-medium text-primary-400">${r.gender ? r.gender + ' ' : ''}${r.german_word}</div>
+                                    <div class="text-sm text-gray-400">${r.uzbek_translation}</div>
+                                </div>
+                            `).join('');
+                            searchResults.classList.remove('hidden');
+                        } else {
+                            searchResults.innerHTML = '<div class="px-4 py-3 text-gray-400">Topilmadi</div>';
+                            searchResults.classList.remove('hidden');
+                        }
+                    })
+                    .catch(() => {
+                        searchResults.classList.add('hidden');
+                    });
+                }, 300);
+            });
+
+            // Hide results on click outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

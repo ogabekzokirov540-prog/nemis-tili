@@ -1,9 +1,26 @@
-Flask==2.3.0
-Flask-SQLAlchemy==3.0.0
-Werkzeug==2.3.0
-Python-dotenv==1.0.0
-pydub==0.25.1
-opencv-python==4.7.0
-Pillow==9.5.0
-requests==2.31.0
-ffmpeg-python==0.2.1
+# GermanMaster AI - Python Dependencies
+# Linux uchun Django loyiha
+
+# Core Framework
+Django>=4.2,<5.1
+Pillow>=10.0  # Rasm bilan ishlash uchun
+
+# Database (Production uchun PostgreSQL)
+# psycopg2-binary>=2.9  # PostgreSQL uchun uncomment qiling
+
+# Media & File handling
+django-cleanup>=8.0  # O'chirilgan fayllarni avtomatik tozalash
+
+# API & AI Features (ixtiyoriy)
+# requests>=2.31  # API chaqiruvlar uchun
+# openai>=1.0  # OpenAI GPT uchun
+# deepl>=1.15  # DeepL tarjima uchun
+# SpeechRecognition>=3.10  # Audio-to-Text uchun
+
+# Development tools
+# django-debug-toolbar>=4.2
+# django-extensions>=3.2
+
+# Production deployment
+# gunicorn>=21.2
+# whitenoise>=6.5  # Static files serving

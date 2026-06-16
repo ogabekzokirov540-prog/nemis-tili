@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lesson.title }} - Study Room{% endblock %}
+{% block page_title %}Study Room{% endblock %}
+
+{% block content %}
+<!-- Lesson Header -->
+<div class="bg-gray-800 rounded-xl p-4 border border-gray-700 mb-6">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            {% if prev_lesson %}
+            <a href="{% url 'lessons:study_room' prev_lesson.slug %}" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </a>
+            {% endif %}
+            <div>
+                <h1 class="text-xl font-bold text-white">{{ lesson.title }}</h1>
+                <p class="text-sm text-gray-400">{{ lesson.category.name }} · {{ lesson.level }} · {{ lesson.duration_minutes }} daqiqa</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            {% if progress.status != 'completed' %}
+            <form method="post" action="{% url 'lessons:complete' lesson.slug %}">
+                {% csrf_token %}
+                <button type="submit" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm transition">
+                    ✓ Tugatdim
+                </button>
+            </form>
+            {% else %}
+            <span class="bg-green-500/20 text-green-400 px-4 py-2 rounded-lg text-sm">✓ Tugatilgan</span>
+            {% endif %}
+            {% if next_lesson %}
+            <a href="{% url 'lessons:study_room' next_lesson.slug %}" class="text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Split Screen Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- LEFT: Kontent (2/3) -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Video Player -->
+        {% if lesson.video_url or lesson.video_file %}
+        <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+            <div class="aspect-video bg-black">
+                {% if lesson.video_url %}
+                <iframe src="{{ lesson.video_url }}" class="w-full h-full" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                {% elif lesson.video_file %}
+                <video controls class="w-full h-full">
+                    <source src="{{ lesson.video_file.url }}" type="video/mp4">
+                </video>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Audio Player -->
+        {% if lesson.audio_file %}
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+            <h3 class="text-sm font-medium text-gray-400 mb-3">🎧 Audio tinglash</h3>
+            <audio controls class="w-full" style="height: 40px;">
+                <source src="{{ lesson.audio_file.url }}">
+            </audio>
+        </div>
+        {% endif %}
+
+        <!-- PDF Viewer -->
+        {% if lesson.pdf_file %}
+        <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+            <div class="p-3 border-b border-gray-700 flex items-center justify-between">
+                <h3 class="text-sm font-medium text-gray-400">📄 PDF Darslik</h3>
+                <a href="{{ lesson.pdf_file.url }}" download class="text-xs bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-gray-300 transition">
+                    ⬇ Yuklab olish
+                </a>
+            </div>
+            <div id="pdf-viewer" class="bg-gray-900 p-4 min-h-[600px] flex items-center justify-center">
+                <canvas id="pdf-canvas"></canvas>
+            </div>
+            <div class="p-3 border-t border-gray-700 flex items-center justify-center space-x-4">
+                <button onclick="prevPage()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm">← Oldingi</button>
+                <span id="page-info" class="text-sm text-gray-400">1 / 1</span>
+                <button onclick="nextPage()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm">Keyingi →</button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Dars matni -->
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <h3 class="text-lg font-semibold text-white mb-4">📖 Dars matni</h3>
+            <div class="prose prose-invert max-w-none text-gray-300 leading-relaxed" id="lesson-content">
+                {{ lesson.content|safe }}
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Interaktiv panel (1/3) -->
+    <div class="space-y-6">
+        <!-- Darsga oid so'zlar -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+            <div class="p-4 border-b border-gray-700 flex items-center justify-between">
+                <h3 class="font-semibold text-white">📝 So'zlar ({{ vocabularies.count }})</h3>
+            </div>
+            <div class="max-h-96 overflow-y-auto">
+                {% for word in vocabularies %}
+                <div class="p-3 border-b border-gray-700/50 hover:bg-gray-700/50 cursor-pointer vocab-item" 
+                     data-word="{{ word.german_word }}" data-translation="{{ word.uzbek_translation }}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-primary-400 font-medium">
+                                {% if word.gender %}<span class="text-xs text-gray-500">{{ word.gender }}</span>{% endif %}
+                                {{ word.german_word }}
+                            </span>
+                            <p class="text-sm text-gray-400">{{ word.uzbek_translation }}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            {% if word.audio_pronunciation %}
+                            <button onclick="playAudio('{{ word.audio_pronunciation.url }}')" class="text-gray-400 hover:text-white">
+                                🔊
+                            </button>
+                            {% endif %}
+                            {% if word.image %}
+                            <img src="{{ word.image.url }}" class="w-8 h-8 rounded object-cover">
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if word.example_sentence_de %}
+                    <p class="text-xs text-gray-500 mt-1 italic">{{ word.example_sentence_de }}</p>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="p-4 text-center text-gray-500 text-sm">
+                    Bu darsga so'zlar qo'shilmagan
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Eslatmalar -->
+        <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+            <div class="p-4 border-b border-gray-700 flex items-center justify-between">
+                <h3 class="font-semibold text-white">📝 Eslatmalar</h3>
+                <a href="{% url 'notes:create' %}" class="text-xs bg-primary-600 hover:bg-primary-500 px-3 py-1 rounded text-white transition">+ Yangi</a>
+            </div>
+            <div class="max-h-64 overflow-y-auto">
+                {% for note in notes %}
+                <a href="{% url 'notes:edit' note.pk %}" class="block p-3 border-b border-gray-700/50 hover:bg-gray-700/50">
+                    <h4 class="text-sm font-medium text-gray-300">{{ note.title }}</h4>
+                    <p class="text-xs text-gray-500 mt-1 truncate">{{ note.content|truncatewords:15 }}</p>
+                </a>
+                {% empty %}
+                <div class="p-4 text-center text-gray-500 text-sm">
+                    Eslatmalar yo'q
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- AI tarjima paneli -->
+        <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+            <h3 class="font-semibold text-white mb-3">🤖 Tezkor tarjima</h3>
+            <div class="space-y-3">
+                <input type="text" id="translate-input" placeholder="So'z yozing..."
+                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                <button onclick="translateWord()" class="w-full bg-primary-600 hover:bg-primary-500 text-white text-sm py-2 rounded-lg transition">
+                    Tarjima qilish
+                </button>
+                <div id="translate-result" class="hidden bg-gray-700/50 rounded-lg p-3">
+                    <p class="text-sm text-primary-400 font-medium" id="translate-output"></p>
+                    <p class="text-xs text-gray-400 mt-1" id="translate-context"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // PDF Viewer
+    {% if lesson.pdf_file %}
+    let pdfDoc = null, pageNum = 1, pageRendering = false;
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+
+    pdfjsLib.getDocument('{{ lesson.pdf_file.url }}').promise.then(function(pdf) {
+        pdfDoc = pdf;
+        document.getElementById('page-info').textContent = `1 / ${pdf.numPages}`;
+        renderPage(1);
+    });
+
+    function renderPage(num) {
+        pageRendering = true;
+        pdfDoc.getPage(num).then(function(page) {
+            const viewport = page.getViewport({scale: 1.5});
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            page.render({canvasContext: ctx, viewport: viewport}).promise.then(() => {
+                pageRendering = false;
+            });
+        });
+        document.getElementById('page-info').textContent = `${num} / ${pdfDoc.numPages}`;
+    }
+
+    function prevPage() {
+        if (pageNum <= 1) return;
+        pageNum--;
+        renderPage(pageNum);
+    }
+
+    function nextPage() {
+        if (pageNum >= pdfDoc.numPages) return;
+        pageNum++;
+        renderPage(pageNum);
+    }
+    {% endif %}
+
+    // Audio playback
+    function playAudio(url) {
+        const audio = new Audio(url);
+        audio.play();
+    }
+
+    // AI Translation
+    function translateWord() {
+        const input = document.getElementById('translate-input');
+        const word = input.value.trim();
+        if (!word) return;
+
+        fetch('/ai/translate/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: word, source_lang: 'de', target_lang: 'uz'})
+        })
+        .then(r => r.json())
+        .then(data => {
+            const resultDiv = document.getElementById('translate-result');
+            const output = document.getElementById('translate-output');
+            const context = document.getElementById('translate-context');
+            
+            if (data.translation) {
+                output.textContent = `${data.gender ? data.gender + ' ' : ''}${word} = ${data.translation}`;
+                context.textContent = data.context || '';
+            } else {
+                output.textContent = data.message || 'Tarjima topilmadi';
+                context.textContent = '';
+            }
+            resultDiv.classList.remove('hidden');
+        });
+    }
+
+    // Enter key for translation
+    document.getElementById('translate-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') translateWord();
+    });
+
+    // Click on vocabulary word to translate
+    document.querySelectorAll('.vocab-item').forEach(item => {
+        item.addEventListener('click', function() {
+            document.getElementById('translate-input').value = this.dataset.word;
+            translateWord();
+        });
+    });
+</script>
+{% endblock %}

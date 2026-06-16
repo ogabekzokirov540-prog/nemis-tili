@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ note.title }} - Tahrirlash{% endblock %}
+{% block page_title %}Eslatmani tahrirlash{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Sarlavha</label>
+                    <input type="text" name="title" value="{{ note.title }}" required
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Matn</label>
+                    <textarea name="content" rows="10" required
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none font-mono text-sm">{{ note.content }}</textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Bog'liq dars</label>
+                        <select name="lesson_id" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500">
+                            <option value="">Tanlang...</option>
+                            {% for lesson in lessons %}
+                            <option value="{{ lesson.id }}" {% if note.lesson_id == lesson.id %}selected{% endif %}>{{ lesson.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Rang</label>
+                        <input type="color" name="color" value="{{ note.color }}"
+                            class="w-full h-10 bg-gray-700 border border-gray-600 rounded-lg cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Teglar</label>
+                        <input type="text" name="tags" value="{{ note.tags }}"
+                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none">
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" name="is_pinned" {% if note.is_pinned %}checked{% endif %} class="w-4 h-4 rounded bg-gray-700 border-gray-600 text-primary-600 focus:ring-primary-500">
+                        <span class="text-sm text-gray-300">📌 Qadoqlash</span>
+                    </label>
+                </div>
+
+                <!-- Mavjud fayllar -->
+                {% if note.attachments.all %}
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Mavjud fayllar</label>
+                    <div class="space-y-1">
+                        {% for att in note.attachments.all %}
+                        <div class="flex items-center space-x-2 text-sm text-gray-300">
+                            <span>📎</span>
+                            <a href="{{ att.file.url }}" class="text-primary-400 hover:underline">{{ att.file_name }}</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Yangi fayllar biriktirish</label>
+                    <input type="file" name="attachments" multiple
+                        class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:bg-primary-600 file:text-white file:text-sm">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <a href="{% url 'notes:list' %}" class="text-gray-400 hover:text-white transition">← Orqaga</a>
+            <button type="submit" class="bg-green-600 hover:bg-green-500 text-white px-8 py-3 rounded-lg font-medium transition">
+                Saqlash
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

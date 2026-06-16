@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Asboblar - GermanMaster AI{% endblock %}
+{% block page_title %}AI Asboblar{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Tarjima tool -->
+    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h3 class="text-lg font-semibold text-white mb-4">🤖 Tezkor tarjima</h3>
+        <p class="text-sm text-gray-400 mb-4">Nemischa so'z yoki gap yozing, tarjimasini va kontekstini ko'ring</p>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Nemischa matn</label>
+                <textarea id="translate-input" rows="3"
+                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                    placeholder="Masalan: Haus, Ich gehe nach Hause, schön..."></textarea>
+            </div>
+            <button onclick="doTranslate()" class="w-full bg-primary-600 hover:bg-primary-500 text-white py-3 rounded-lg transition font-medium">
+                Tarjima qilish
+            </button>
+            <div id="translate-result" class="hidden">
+                <div class="bg-gray-700/50 rounded-lg p-4 space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs bg-primary-500/20 text-primary-400 px-2 py-0.5 rounded" id="result-gender"></span>
+                        <h4 class="text-lg font-semibold text-white" id="result-translation"></h4>
+                    </div>
+                    <p class="text-sm text-gray-400" id="result-context"></p>
+                    <p class="text-xs text-gray-500" id="result-plural"></p>
+                    <p class="text-xs text-gray-500" id="result-message"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kontekst qidirish -->
+    <div class="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h3 class="text-lg font-semibold text-white mb-4">📚 Kontekst qidirish</h3>
+        <p class="text-sm text-gray-400 mb-4">So'z haqida barcha ma'lumotlarni bazadan toping</p>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">So'zni kiriting</label>
+                <input type="text" id="context-input"
+                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                    placeholder="Masalan: gehen, Haus, machen...">
+            </div>
+            <button onclick="doContext()" class="w-full bg-green-600 hover:bg-green-500 text-white py-3 rounded-lg transition font-medium">
+                Qidirish
+            </button>
+            <div id="context-result" class="hidden space-y-2 max-h-64 overflow-y-auto"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Oxirgi tarjimalar -->
+{% if recent_translations %}
+<div class="mt-8 bg-gray-800 rounded-xl p-6 border border-gray-700">
+    <h3 class="text-lg font-semibold text-white mb-4">Oxirgi tarjimalar</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {% for t in recent_translations %}
+        <div class="bg-gray-700/50 rounded-lg p-3">
+            <p class="text-sm text-white font-medium">{{ t.source_text }}</p>
+            <p class="text-sm text-primary-400">→ {{ t.translated_text }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function doTranslate() {
+    const text = document.getElementById('translate-input').value.trim();
+    if (!text) return;
+
+    fetch('/ai/translate/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({text: text, source_lang: 'de', target_lang: 'uz'})
+    })
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('translate-result').classList.remove('hidden');
+        document.getElementById('result-translation').textContent = data.translation || 'Topilmadi';
+        document.getElementById('result-gender').textContent = data.gender || '';
+        document.getElementById('result-context').textContent = data.context || '';
+        document.getElementById('result-plural').textContent = data.plural ? 'Ko\'plik: ' + data.plural : '';
+        document.getElementById('result-message').textContent = data.message || '';
+    });
+}
+
+function doContext() {
+    const word = document.getElementById('context-input').value.trim();
+    if (!word) return;
+
+    fetch('/ai/context/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({word: word})
+    })
+    .then(r => r.json())
+    .then(data => {
+        const container = document.getElementById('context-result');
+        container.classList.remove('hidden');
+        
+        if (data.results && data.results.length > 0) {
+            container.innerHTML = data.results.map(r => `
+                <div class="bg-gray-700/50 rounded-lg p-3">
+                    <div class="flex items-center space-x-2">
+                        ${r.gender ? `<span class="text-xs bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded">${r.gender}</span>` : ''}
+                        <span class="text-white font-medium">${r.german_word}</span>
+                        <span class="text-gray-400">— ${r.uzbek_translation}</span>
+                    </div>
+                    ${r.example_sentence_de ? `<p class="text-xs text-gray-500 mt-1 italic">${r.example_sentence_de}</p>` : ''}
+                    ${r.context_note ? `<p class="text-xs text-gray-500 mt-1">${r.context_note}</p>` : ''}
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p class="text-gray-400 text-sm">Natija topilmadi. Admin paneldan so\'z qo\'shing.</p>';
+        }
+    });
+}
+
+// Enter key
+document.getElementById('translate-input').addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doTranslate(); } });
+document.getElementById('context-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') doContext(); });
+</script>
+{% endblock %}

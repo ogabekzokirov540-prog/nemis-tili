@@ -3,48 +3,33 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
-PIPFILE.lock
+dist/
+build/
+eggs/
 
 # Virtual Environment
 venv/
-ENV/
 env/
+.env
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+*.log
 
 # IDE
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 *~
+
+# OS
 .DS_Store
+Thumbs.db
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Media files (temporary)
-temp_uploads/
-*.tmp
-
-# Environment variables
-.env
-.env.local
+# Node (agar frontend build bo'lsa)
+node_modules/

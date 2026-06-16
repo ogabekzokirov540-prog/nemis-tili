@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Lug'at - GermanMaster AI{% endblock %}
+{% block page_title %}Lug'at ({{ total_count }} so'z){% endblock %}
+
+{% block content %}
+<!-- Filter & Search -->
+<div class="bg-gray-800 rounded-xl p-4 border border-gray-700 mb-6">
+    <form method="get" class="flex flex-wrap gap-4 items-center">
+        <div class="flex-1 min-w-[200px]">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="So'z qidirish..."
+                class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:outline-none">
+        </div>
+        <select name="category" class="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200">
+            <option value="">Barcha turlar</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="gender" class="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-200">
+            <option value="">Barcha artiklar</option>
+            <option value="der">der (Maskulin)</option>
+            <option value="die">die (Feminin)</option>
+            <option value="das">das (Neytral)</option>
+        </select>
+        <button type="submit" class="bg-primary-600 hover:bg-primary-500 text-white px-6 py-2 rounded-lg transition">Qidirish</button>
+        <a href="{% url 'vocabulary:add' %}" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg transition">+ Yangi so'z</a>
+    </form>
+</div>
+
+<!-- Words Grid -->
+{% if words %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for word in words %}
+    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-primary-500/50 transition group relative">
+        <!-- Favorite button -->
+        <button onclick="toggleFavorite({{ word.pk }}, this)" class="absolute top-3 right-3 text-lg {% if word.is_favorite %}text-yellow-400{% else %}text-gray-600{% endif %} hover:text-yellow-400 transition">
+            {% if word.is_favorite %}★{% else %}☆{% endif %}
+        </button>
+
+        <div class="flex items-start space-x-3">
+            {% if word.image %}
+            <img src="{{ word.image.url }}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
+            {% else %}
+            <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-primary-500/20 to-primary-700/20 flex items-center justify-center flex-shrink-0">
+                <span class="text-2xl font-bold text-primary-400">{{ word.german_word|make_list|first }}</span>
+            </div>
+            {% endif %}
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center space-x-2">
+                    {% if word.gender %}
+                    <span class="text-xs px-1.5 py-0.5 rounded {% if word.gender == 'der' %}bg-blue-500/20 text-blue-400{% elif word.gender == 'die' %}bg-pink-500/20 text-pink-400{% else %}bg-green-500/20 text-green-400{% endif %}">{{ word.gender }}</span>
+                    {% endif %}
+                    <h3 class="text-white font-semibold truncate">{{ word.german_word }}</h3>
+                </div>
+                <p class="text-sm text-gray-400 mt-1">{{ word.uzbek_translation }}</p>
+                {% if word.example_sentence_de %}
+                <p class="text-xs text-gray-500 mt-2 italic truncate">{{ word.example_sentence_de }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- SRS & Stats -->
+        <div class="mt-3 pt-3 border-t border-gray-700 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="flex">
+                    {% for i in "12345" %}
+                    <div class="w-2 h-2 rounded-full mx-0.5 {% if forloop.counter <= word.srs_level %}bg-primary-400{% else %}bg-gray-600{% endif %}"></div>
+                    {% endfor %}
+                </div>
+                <span class="text-xs text-gray-500">SRS {{ word.srs_level }}/5</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                {% if word.audio_pronunciation %}
+                <button onclick="new Audio('{{ word.audio_pronunciation.url }}').play()" class="text-gray-400 hover:text-white text-sm">🔊</button>
+                {% endif %}
+                <span class="text-xs text-gray-500">{{ word.accuracy_percentage }}%</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-16 bg-gray-800 rounded-xl border border-gray-700">
+    <span class="text-5xl mb-4 block">📖</span>
+    <h3 class="text-xl font-semibold text-white mb-2">Lug'at bo'sh</h3>
+    <p class="text-gray-400 mb-4">Yangi so'z qo'shishni boshlang</p>
+    <a href="{% url 'vocabulary:add' %}" class="inline-block bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-lg transition">+ Yangi so'z qo'shish</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFavorite(id, btn) {
+    fetch(`/vocabulary/${id}/favorite/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': getCookie('csrftoken')}
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.textContent = data.is_favorite ? '★' : '☆';
+        btn.classList.toggle('text-yellow-400', data.is_favorite);
+        btn.classList.toggle('text-gray-600', !data.is_favorite);
+    });
+}
+
+function getCookie(name) {
+    let value = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return value ? value.pop() : '';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Eslatmalar - GermanMaster AI{% endblock %}
+{% block page_title %}Eslatmalar{% endblock %}
+
+{% block content %}
+<!-- Search & Actions -->
+<div class="flex flex-wrap gap-4 items-center mb-6">
+    <form method="get" class="flex-1 min-w-[200px]">
+        <input type="text" name="search" value="{{ search_query }}" placeholder="Eslatma qidirish..."
+            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:outline-none">
+    </form>
+    <a href="{% url 'notes:create' %}" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg transition">
+        + Yangi eslatma
+    </a>
+</div>
+
+<!-- Notes Grid -->
+{% if notes %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for note in notes %}
+    <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-gray-600 transition group relative">
+        <!-- Color bar -->
+        <div class="h-1" style="background-color: {{ note.color }}"></div>
+        
+        <div class="p-4">
+            <div class="flex items-start justify-between">
+                <h3 class="text-white font-medium group-hover:text-primary-400 transition">{{ note.title }}</h3>
+                <div class="flex items-center space-x-1">
+                    {% if note.is_pinned %}
+                    <span class="text-yellow-400 text-sm">📌</span>
+                    {% endif %}
+                </div>
+            </div>
+            <p class="text-sm text-gray-400 mt-2 line-clamp-3">{{ note.content|truncatewords:25 }}</p>
+            
+            {% if note.lesson %}
+            <span class="inline-block mt-3 text-xs bg-gray-700 px-2 py-0.5 rounded text-gray-400">📚 {{ note.lesson.title|truncatewords:4 }}</span>
+            {% endif %}
+            
+            {% if note.tags %}
+            <div class="mt-2 flex flex-wrap gap-1">
+                {% for tag in note.tags|make_list %}
+                {% endfor %}
+                <span class="text-xs text-gray-500">{{ note.tags }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="mt-3 pt-3 border-t border-gray-700 flex items-center justify-between">
+                <span class="text-xs text-gray-500">{{ note.updated_at|date:"d.m.Y H:i" }}</span>
+                <div class="flex items-center space-x-2">
+                    <a href="{% url 'notes:edit' note.pk %}" class="text-xs text-primary-400 hover:text-primary-300">Tahrirlash</a>
+                    <form method="post" action="{% url 'notes:delete' note.pk %}" class="inline" onsubmit="return confirm('O\'chirilsinmi?')">
+                        {% csrf_token %}
+                        <button type="submit" class="text-xs text-red-400 hover:text-red-300">O'chirish</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-16 bg-gray-800 rounded-xl border border-gray-700">
+    <span class="text-5xl mb-4 block">📝</span>
+    <h3 class="text-xl font-semibold text-white mb-2">Eslatmalar yo'q</h3>
+    <p class="text-gray-400 mb-4">Darslardan eslatmalar yozishni boshlang</p>
+    <a href="{% url 'notes:create' %}" class="inline-block bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-lg transition">+ Yangi eslatma</a>
+</div>
+{% endif %}
+{% endblock %}
