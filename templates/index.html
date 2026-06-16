@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nemis Tili O'rganish Platformasi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container">
+            <div class="logo">🇩🇪 Nemis Tili</div>
+            <nav>
+                <a href="/">Bosh Sahifa</a>
+                <a href="/darslar">Darslar</a>
+                <a href="#about">Haqida</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Nemis Tilini O'rganing - Kuchli va Samarali Yo'l</h1>
+                <p>Audio, Video, PDF, Matn va Rasmlar orqali Chuqur O'rganish</p>
+                <button class="btn-primary" onclick="window.location.href='/darslar'">Darslarni Boshlash</button>
+            </div>
+        </section>
+
+        <section class="features">
+            <h2>Nima Bor Bu Platformada?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="icon">🎥</div>
+                    <h3>Video Darslar</h3>
+                    <p>Natiq German tilini anglash uchun real videolar</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🎵</div>
+                    <h3>Audio Mashqlar</h3>
+                    <p>To'g'ri talaffuz va tinglash qobiliyatini rivojlantirish</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📚</div>
+                    <h3>Matn Darslar</h3>
+                    <p>Gramma tika, lugat va ifodalarni tafsiliy o'rganish</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📄</div>
+                    <h3>PDF Resurslar</h3>
+                    <p>Chuqur o'rganish uchun professional darsliklari</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🖼️</div>
+                    <h3>Visual O'rganish</h3>
+                    <p>Rasmlar va sxemalar orqali lug'atni yodda saqlash</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📊</div>
+                    <h3>Testlar va Quiz</h3>
+                    <p>Bilimingizni tekshiring va taraqqiyotingizni kuzating</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="categories" id="categories">
+            <h2>O'rganish Materiallari</h2>
+            <div class="category-buttons">
+                <button class="cat-btn" onclick="filterLessons('text')">📝 Matn</button>
+                <button class="cat-btn" onclick="filterLessons('audio')">🎵 Audio</button>
+                <button class="cat-btn" onclick="filterLessons('video')">🎥 Video</button>
+                <button class="cat-btn" onclick="filterLessons('pdf')">📄 PDF</button>
+                <button class="cat-btn" onclick="filterLessons('image')">🖼️ Rasmlar</button>
+                <button class="cat-btn" onclick="filterLessons('quiz')">📊 Quiz</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Nemis Tili O'rganish Platformasi. Barcha huquqlar himoyalangan.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
